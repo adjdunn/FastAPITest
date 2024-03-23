@@ -128,7 +128,11 @@ def get_data():
     conn, cursor = db_connection()
     
     # Query to select all rows from the table
-    select_query = "SELECT * FROM wirenews"
+    select_query = """
+    SELECT id, title, url, date, company, symbol, exchange, region, market_size, 
+           sector, industry, logo_url, html_content, date_str
+    FROM wirenews
+    """
     
     # Execute the SELECT query
     cursor.execute(select_query)
@@ -157,4 +161,58 @@ def get_data():
 
 
 
+def api_call(sectors=None, regions=None, sizes=None, date=None):
+    conn, cursor = db_connection()
+    
 
+    query = """
+    SELECT id, title, url, date, company, symbol, exchange, region, market_size, 
+           sector, industry, logo_url, html_content, date_str
+    FROM wirenews
+    """
+
+    if sectors or regions or sizes or date:
+        query += ' WHERE'
+        if sectors:
+            sectors_list = sectors.split(',')
+            sectors_list = [sec.replace('-', ' ') for sec in sectors_list]
+            sectors_str = ', '.join(f"'{sector}'" for sector in sectors_list)
+            query += f" sector IN ({sectors_str})"
+            if regions:
+                query += ' AND'
+
+        if regions:
+            regions_list = regions.split(',')
+            regions_str = ', '.join(f"'{region}'" for region in regions_list)
+            query += f" region IN ({regions_str})"
+            if sizes:
+                query += ' AND'
+            
+        if sizes:
+            sizes_list = sizes.split(',')
+            sizes_str =  ', '.join(f"'{size}'" for size in sizes_list)
+            query += f" market_size IN ({sizes_str})"
+            if date != 'none':
+                query += ' AND'
+                
+        if date:
+            max_date = date + ' 23:59:59'
+            min_date = date + ' 00:00:01'
+            query += f" date >= '{min_date}' AND date <= '{max_date}' ORDER BY date DESC"
+            
+        else:       
+            query += "ORDER BY date DESC LIMIT 50"
+
+
+
+    cursor.execute(query)
+
+    rows = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+    news_articles = [dict(zip(column_names, row)) for row in rows]
+    cursor.close()
+    conn.close()
+
+    news_articles_json = json.dumps(news_articles, default=str)
+
+    return news_articles_json
