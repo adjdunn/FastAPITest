@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div id="dataContainer">
+    </div>
+      
+    
+    <script>
+        fetch("https://fastapitest-djj9.onrender.com/news", {
+            method: "GET",
+            headers: {
+                "Authorization": "ApiKey YOUR_API_KEY_HERE"
+            }
+        })
+        .then(response => response.json())  // Assuming the response is JSON
+        .then(data => {
+            // Assuming 'data' is an array of items you want to display
+            const container = document.getElementById("dataContainer");
+            container.innerHTML = ''; // Clear existing content
+            data.forEach(item => {
+                // Create a new element for each item (e.g., a paragraph or list item)
+                const element = document.createElement("p"); // Example with <p>, change as needed
+                element.textContent = item.name; // Assuming 'item' has a property 'name'
+                container.appendChild(element);
+            });
+        })
+        .catch(error => console.error("Error:", error));
+    </script>
+    
+</body>
+</html>
